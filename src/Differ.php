@@ -2,7 +2,10 @@
 
 namespace GenDiff\Differ;
 
+use Symfony\Component\Yaml\Yaml;
+
 const FORMAT_JSON = 'json';
+const FORMAT_YAML = 'yaml';
 const FORMAT_ARRAY = 'array';
 
 const STR_STATUS_ADD = 'add';
@@ -18,6 +21,11 @@ function genDiff($srcFirst, $srcSecond, $format = FORMAT_JSON)
         return buildResponse(diffArrays($firstArr, $secondArr));
     } elseif ($format === FORMAT_ARRAY) {
         return buildResponse(diffArrays($srcFirst, $srcSecond));
+    } elseif ($format === FORMAT_YAML) {
+        $firstArr = Yaml::parse($srcFirst, Yaml::PARSE_OBJECT_FOR_MAP);
+        $secondArr = Yaml::parse($srcSecond, Yaml::PARSE_OBJECT_FOR_MAP);
+
+        return buildResponse(diffArrays($firstArr, $secondArr));
     }
 }
 
@@ -89,7 +97,7 @@ function buildResponse(array $results): string
             function ($itemArr) {
                 return getStatusLabel($itemArr['state'])
                     . $itemArr['key'] . ': '
-                    . (is_int($itemArr['value']) ? $itemArr['value'] : '"'. $itemArr['value'] .'"') ;
+                    . (is_int($itemArr['value']) ? $itemArr['value'] : '"' . $itemArr['value'] . '"');
             },
             $results
         )
