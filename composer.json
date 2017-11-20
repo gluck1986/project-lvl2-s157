@@ -13,14 +13,14 @@
     "phpcs": "phpcs",
     "phpunit": "phpunit"
   },
+  "bin": [
+    "bin/gendiff"
+  ],
   "autoload": {
     "psr-4": {
       "GenDiff\\": "src",
       "GenDiff\\Tests\\": "tests"
     },
-    "bin": [
-      "bin/gendiff"
-    ],
     "files": [
       "src\\Cli.php",
       "src\\Route.php",
