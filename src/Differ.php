@@ -24,7 +24,6 @@ function genDiff($srcFirst, $srcSecond, $format = FORMAT_JSON)
     } elseif ($format === FORMAT_YAML) {
         $firstArr = Yaml::parse($srcFirst);
         $secondArr = Yaml::parse($srcSecond);
-        var_dump($firstArr);
         return buildResponse(diffArrays($firstArr, $secondArr));
     }
 }
