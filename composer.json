@@ -23,7 +23,7 @@
     },
     "files": [
       "src\\Cli.php",
-      "src\\Route.php",
+      "src\\CliFunctions.php",
       "src\\Differ.php",
       "tests\\Fixtures.php"
     ]

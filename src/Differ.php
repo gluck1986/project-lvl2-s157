@@ -88,8 +88,8 @@ function buildResponse(array $results): string
         array_map(
             function ($itemArr) {
                 return getStatusLabel($itemArr['state'])
-                    . $itemArr['key'] . ' : '
-                    . $itemArr['value'];
+                    . $itemArr['key'] . ': '
+                    . (is_int($itemArr['value']) ? $itemArr['value'] : '"'. $itemArr['value'] .'"') ;
             },
             $results
         )

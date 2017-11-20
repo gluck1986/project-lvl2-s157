@@ -16,12 +16,12 @@ class ArrayDiffResponseTest extends TestCase
                 ['key2' => 'val2', 'key1' => 'val6', 'key3' => 'val3', 'key4' => 'val4',],
                 ['key1' => 'val1', 'key3' => 'val3', 'key4' => 'val4', 'key9' => 123],
                 '{' . PHP_EOL .
-                ' - key2 : val2'. PHP_EOL .
-                ' - key1 : val6'. PHP_EOL .
-                ' + key1 : val1'. PHP_EOL .
-                '   key3 : val3'. PHP_EOL .
-                '   key4 : val4'. PHP_EOL .
-                ' + key9 : 123'. PHP_EOL .
+                ' - key2: "val2"'. PHP_EOL .
+                ' - key1: "val6"'. PHP_EOL .
+                ' + key1: "val1"'. PHP_EOL .
+                '   key3: "val3"'. PHP_EOL .
+                '   key4: "val4"'. PHP_EOL .
+                ' + key9: 123'. PHP_EOL .
                 '' .
                 '}',
 
