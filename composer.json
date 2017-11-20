@@ -1,0 +1,35 @@
+{
+  "name": "gluck1986/gendiff",
+  "description": "gendiff",
+  "type": "project",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "gluck",
+      "email": "gluck1986@gmail.com"
+    }
+  ],
+  "scripts": {
+    "phpcs": "phpcs",
+    "phpunit": "phpunit"
+  },
+  "autoload": {
+    "psr-4": {
+      "GenDiff\\": "src",
+      "GenDiff\\Tests\\": "tests"
+    },
+    "bin": [
+      "bin/gendiff"
+    ],
+    "files": [
+      "src\\Cli.php"
+    ]
+  },
+  "require": {
+    "php": ">=7.0.0",
+    "docopt/docopt": "^1.0",
+    "phpunit/phpunit": "^6.4",
+    "squizlabs/php_codesniffer": "^3.1",
+    "codeclimate/php-test-reporter": "^0.4.4"
+  }
+}
