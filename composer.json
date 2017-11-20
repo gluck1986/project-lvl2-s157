@@ -1,7 +1,7 @@
 {
   "name": "gluck1986/gendiff",
   "description": "gendiff",
-  "type": "project",
+  "type": "library",
   "license": "MIT",
   "authors": [
     {
@@ -24,7 +24,8 @@
     "files": [
       "src\\Cli.php",
       "src\\Route.php",
-      "src\\Application.php"
+      "src\\Differ.php",
+      "tests\\Fixtures.php"
     ]
   },
   "require": {
@@ -32,6 +33,7 @@
     "docopt/docopt": "^1.0",
     "phpunit/phpunit": "^6.4",
     "squizlabs/php_codesniffer": "^3.1",
-    "codeclimate/php-test-reporter": "^0.4.4"
+    "codeclimate/php-test-reporter": "^0.4.4",
+    "funct/funct": "^1.4"
   }
 }
