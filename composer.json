@@ -22,7 +22,9 @@
       "bin/gendiff"
     ],
     "files": [
-      "src\\Cli.php"
+      "src\\Cli.php",
+      "src\\Route.php",
+      "src\\Application.php"
     ]
   },
   "require": {
