@@ -22,9 +22,9 @@ function genDiff($srcFirst, $srcSecond, $format = FORMAT_JSON)
     } elseif ($format === FORMAT_ARRAY) {
         return buildResponse(diffArrays($srcFirst, $srcSecond));
     } elseif ($format === FORMAT_YAML) {
-        $firstArr = Yaml::parse($srcFirst, Yaml::PARSE_OBJECT_FOR_MAP);
-        $secondArr = Yaml::parse($srcSecond, Yaml::PARSE_OBJECT_FOR_MAP);
-
+        $firstArr = Yaml::parse($srcFirst);
+        $secondArr = Yaml::parse($srcSecond);
+        var_dump($firstArr);
         return buildResponse(diffArrays($firstArr, $secondArr));
     }
 }

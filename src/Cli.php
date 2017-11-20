@@ -21,7 +21,7 @@ function run()
     if (is_null($firstFile) || is_null($secondFile)) {
         return;
     }
-    echo genDiff($firstFile, $secondFile, getAutoFormat($firstFile));
+    echo genDiff($firstFile, $secondFile, getAutoFormat($firstPath));
 }
 
 function getAutoFormat($fpath)
