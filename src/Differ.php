@@ -3,18 +3,21 @@
 namespace GenDiff\Differ;
 
 const FORMAT_JSON = 'json';
+const FORMAT_ARRAY = 'array';
 
 const STR_STATUS_ADD = 'add';
 const STR_STATUS_REMOVE = 'rm';
 const STR_STATUS_IDENTICAL = 'ident';
 
-function genDiff(string $srcFirst, string $srcSecond, $format = FORMAT_JSON)
+function genDiff($srcFirst, $srcSecond, $format = FORMAT_JSON)
 {
     if ($format === FORMAT_JSON) {
         $firstArr = json_decode($srcFirst, true);
         $secondArr = json_decode($srcSecond, true);
 
         return buildResponse(diffArrays($firstArr, $secondArr));
+    } elseif ($format === FORMAT_ARRAY) {
+        return buildResponse(diffArrays($srcFirst, $srcSecond));
     }
 }
 
@@ -80,16 +83,27 @@ function buildResultValue($state, $key, $value)
 
 function buildResponse(array $results): string
 {
-    return '';
+    $resultString = implode(
+        PHP_EOL,
+        array_map(
+            function ($itemArr) {
+                return getStatusLabel($itemArr['state'])
+                    . $itemArr['key'] . ' : '
+                    . $itemArr['value'];
+            },
+            $results
+        )
+    );
+
+    return '{' . PHP_EOL . $resultString . PHP_EOL . '}';
 }
 
 function getStatusLabel(string $status): string
 {
     $statusLabels = [
-        STR_STATUS_ADD => '+',
-        STR_STATUS_REMOVE => '-',
-        STR_STATUS_IDENTICAL => '',
-
+        STR_STATUS_ADD => ' + ',
+        STR_STATUS_REMOVE => ' - ',
+        STR_STATUS_IDENTICAL => '   ',
     ];
 
     return $statusLabels[$status];
