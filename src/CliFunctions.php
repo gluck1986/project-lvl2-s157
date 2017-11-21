@@ -3,6 +3,7 @@
 namespace GenDiff\CliFunctions;
 
 use Docopt\Handler;
+use function GenDiff\Differ\genDiff;
 
 function route()
 {
@@ -16,20 +17,12 @@ function route()
     ];
 }
 
-function getFiles($path1, $path2)
+function runDiffer()
 {
-    $str1 = null;
-    $str2 = null;
-    if (file_exists($path1)) {
-        $str1  = file_get_contents($path1);
-    }
-    if (file_exists($path2)) {
-        $str2  = file_get_contents($path2);
-    }
+    list($firstPath, $secondPath, $format) = route();
 
-    return [$str1, $str2];
+    return genDiff($firstPath, $secondPath);
 }
-
 
 function getDoc(): string
 {
@@ -48,7 +41,7 @@ DOC;
 
 function getParams()
 {
-     return [
-         'help'=>true,
-         ];
+    return [
+        'help' => true,
+    ];
 }

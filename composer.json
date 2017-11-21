@@ -25,7 +25,11 @@
       "src\\Cli.php",
       "src\\CliFunctions.php",
       "src\\Differ.php",
-      "tests\\Fixtures.php"
+      "src\\FSFunctions.php",
+      "src\\Validators.php",
+      "src\\ASTDefines.php",
+      "src\\ASTBuilder.php",
+      "src\\ResponseBuilder.php"
     ]
   },
   "require": {
