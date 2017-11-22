@@ -3,9 +3,9 @@
 namespace GenDiff\ResponseBuilder;
 
 use const GenDiff\ASTDefines\RESPONSE_SPACES_NEXT_LEVEL;
-use const GenDiff\ASTDefines\STR_STATUS_ADD;
+use const GenDiff\ASTDefines\STR_STATUS_ADDED;
 use const GenDiff\ASTDefines\STR_STATUS_IDENTICAL;
-use const GenDiff\ASTDefines\STR_STATUS_REMOVE;
+use const GenDiff\ASTDefines\STR_STATUS_REMOVED;
 
 function buildErrResponse(array $errs)
 {
@@ -26,8 +26,8 @@ function buildResponse(array $results, int $spaces = 0): string
                 return generateSpaces($spaces)
                     . getStatusLabel($itemArr['state'])
                     . '"' . $itemArr['key'] . '": '
-                    . (is_array($itemArr['value'])
-                        ? buildResponse($itemArr['value'], $spaces + RESPONSE_SPACES_NEXT_LEVEL)
+                    . (($itemArr['children'])
+                        ? buildResponse($itemArr['children'], $spaces + RESPONSE_SPACES_NEXT_LEVEL)
                         : buildResponseValue($itemArr['value']));
             },
             $results
@@ -49,8 +49,8 @@ function buildResponseValue($value)
 function getStatusLabel(string $status): string
 {
     $statusLabels = [
-        STR_STATUS_ADD => '  + ',
-        STR_STATUS_REMOVE => '  - ',
+        STR_STATUS_ADDED => '  + ',
+        STR_STATUS_REMOVED => '  - ',
         STR_STATUS_IDENTICAL => '    ',
     ];
 

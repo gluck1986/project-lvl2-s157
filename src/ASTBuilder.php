@@ -2,9 +2,9 @@
 
 namespace GenDiff\ASTBuilder;
 
-use const GenDiff\ASTDefines\STR_STATUS_ADD;
+use const GenDiff\ASTDefines\STR_STATUS_ADDED;
 use const GenDiff\ASTDefines\STR_STATUS_IDENTICAL;
-use const GenDiff\ASTDefines\STR_STATUS_REMOVE;
+use const GenDiff\ASTDefines\STR_STATUS_REMOVED;
 
 function build(array $first, array $second): array
 {
@@ -38,7 +38,7 @@ function buildCreatedNodes($created)
     return array_map(
         function ($key, $value) {
             if (is_array($value)) {
-                return buildCreatedLeaf($key, buildIdenticalNodes($value));
+                return buildCreatedLeaf($key, null, buildIdenticalNodes($value));
             }
 
             return buildCreatedLeaf($key, $value);
@@ -87,16 +87,16 @@ function buildDiffNode($key, $valFirst, $valSecond)
 function buildDiffArrNode($key, $valFirst, $valSecond): array
 {
     if (is_array($valFirst) && is_array($valSecond)) {
-        return [buildIdenticalLeaf($key, build($valFirst, $valSecond))];
+        return [buildIdenticalLeaf($key, null, build($valFirst, $valSecond))];
     } elseif (is_array($valFirst)) {
         return [
-            buildRemoveLeaf($key, buildIdenticalLeaf($key, $valFirst)),
+            buildRemoveLeaf($key, null, buildIdenticalLeaf($key, $valFirst)),
             buildCreatedLeaf($key, $valSecond)
         ];
     } else {
         return [
             buildRemoveLeaf($key, $valFirst),
-            buildCreatedLeaf($key, buildIdenticalNodes($valSecond))
+            buildCreatedLeaf($key, null, buildIdenticalNodes($valSecond))
         ];
     }
 }
@@ -104,35 +104,37 @@ function buildDiffArrNode($key, $valFirst, $valSecond): array
 function buildRemoveNode($key, $value)
 {
     if (is_array($value)) {
-        return [buildRemoveLeaf($key, buildIdenticalNodes($value))];
+        return [buildRemoveLeaf($key, null, buildIdenticalNodes($value))];
     }
 
     return [buildRemoveLeaf($key, $value)];
 }
 
-function buildIdenticalLeaf($key, $value)
+function buildIdenticalLeaf(string $key, $value = null, array $children = null)
 {
-    return buildResultValue(STR_STATUS_IDENTICAL, $key, $value);
+    return buildResultValue(STR_STATUS_IDENTICAL, $key, $value, $children);
 }
 
-function buildCreatedLeaf($key, $secondValue)
+function buildCreatedLeaf(string $key, $secondValue = null, array $children = null)
 {
-    return buildResultValue(STR_STATUS_ADD, $key, $secondValue);
+    return buildResultValue(STR_STATUS_ADDED, $key, $secondValue, $children);
 }
 
-function buildRemoveLeaf($key, $firstValue)
+function buildRemoveLeaf(string $key, $firstValue = null, array $children = null)
 {
-    return buildResultValue(STR_STATUS_REMOVE, $key, $firstValue);
+    return buildResultValue(STR_STATUS_REMOVED, $key, $firstValue, $children);
 }
 
 /**
- * @param $state string {STR_STATUS_REMOVE, STR_STATUS_IDENTICAL, STR_STATUS_ADD}
+ * @param $state string {STR_STATUS_REMOVED, STR_STATUS_IDENTICAL, STR_STATUS_ADDED}
  * @param $key string
  * @param $value
+ * @param $children array
  *
  * @return array
+ * @internal param null $children
  */
-function buildResultValue($state, $key, $value)
+function buildResultValue(string $state, string $key, $value = null, array $children = null)
 {
-    return compact($state, $key, $value, ['state', 'key', 'value']);
+    return compact($state, $key, $value, $children, ['state', 'key', 'value', 'children']);
 }

@@ -4,9 +4,9 @@ namespace GenDiff\Tests;
 
 
 use PHPUnit\Framework\TestCase;
-use const GenDiff\ASTDefines\STR_STATUS_ADD;
+use const GenDiff\ASTDefines\STR_STATUS_ADDED;
 use const GenDiff\ASTDefines\STR_STATUS_IDENTICAL;
-use const GenDiff\ASTDefines\STR_STATUS_REMOVE;
+use const GenDiff\ASTDefines\STR_STATUS_REMOVED;
 use function GenDiff\ResponseBuilder\buildResponse;
 
 class ResponseBuilderTest extends TestCase
@@ -15,13 +15,13 @@ class ResponseBuilderTest extends TestCase
     {
         return [[
             [
-                ['state' => STR_STATUS_REMOVE, 'key' => 'key2', 'value' => 'val2'],
-                ['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1'],
-                ['state' => STR_STATUS_IDENTICAL, 'key' => 'key3', 'value' => 'val3'],
-                ['state' => STR_STATUS_IDENTICAL, 'key' => 'key4', 'value' => [
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1'],
-                    ['state' => STR_STATUS_REMOVE, 'key' => 'key2', 'value' => 'val2'],
-                    ['state' => STR_STATUS_ADD, 'key' => 'key2', 'value' => 'val33'],
+                ['state' => STR_STATUS_REMOVED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
+                ['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1', 'children' => null],
+                ['state' => STR_STATUS_IDENTICAL, 'key' => 'key3', 'value' => 'val3', 'children' => null],
+                ['state' => STR_STATUS_IDENTICAL, 'key' => 'key4', 'value' => null, 'children' => [
+                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1', 'children' => null],
+                    ['state' => STR_STATUS_REMOVED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
+                    ['state' => STR_STATUS_ADDED, 'key' => 'key2', 'value' => 'val33', 'children' => null],
 
                 ]],
             ],
@@ -43,11 +43,11 @@ class ResponseBuilderTest extends TestCase
     {
         return [
             [
-                [['state' => STR_STATUS_REMOVE, 'key' => 'key2', 'value' => 'val2'],
-                    ['state' => STR_STATUS_REMOVE, 'key' => 'key1', 'value' => 'val6'],
-                    ['state' => STR_STATUS_ADD, 'key' => 'key1', 'value' => 'val1'],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key3', 'value' => 'val3'],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key4', 'value' => 'val4'],],
+                [['state' => STR_STATUS_REMOVED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
+                    ['state' => STR_STATUS_REMOVED, 'key' => 'key1', 'value' => 'val6', 'children' => null],
+                    ['state' => STR_STATUS_ADDED, 'key' => 'key1', 'value' => 'val1', 'children' => null],
+                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key3', 'value' => 'val3', 'children' => null],
+                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key4', 'value' => 'val4', 'children' => null],],
                 '{' . PHP_EOL .
                 '  - "key2": "val2"' . PHP_EOL .
                 '  - "key1": "val6"' . PHP_EOL .
