@@ -2,6 +2,7 @@
 
 namespace GenDiff\Tests;
 
+use GenDiff\GenDiffException;
 use PHPUnit\Framework\TestCase;
 use function GenDiff\Differ\genDiff;
 
@@ -36,9 +37,9 @@ TEXT;
         $before = __DIR__ . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'before1.json';
         $after = __DIR__ . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'after.json';
 
-        $expected = 'Ошибка: Файл не найден: "' . $before . '"' . PHP_EOL;
-        $result = genDiff($before, $after);
-        $this->assertEquals($expected, $result);
+        $this->expectException(GenDiffException::class);
+        $this->expectExceptionMessage('Файл не найден: "' . $before . '"');
+        genDiff($before, $after);
     }
 
     public function testEmptyFiles()
@@ -56,9 +57,9 @@ TEXT;
         $before = __DIR__ . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'before.json';
         $after = __DIR__ . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'after.yml';
 
-        $expected = 'Ошибка: Расширения файлов не совпадают' . PHP_EOL;
-        $result = genDiff($before, $after);
-        $this->assertEquals($expected, $result);
+        $this->expectException(GenDiffException::class);
+        $this->expectExceptionMessage('Расширения файлов не совпадают');
+        genDiff($before, $after);
     }
 
     public function testYaml()

@@ -19,7 +19,12 @@ function findNotExistsFiles(array $filePaths): array
     });
 }
 
-function getFilesContent(string $path1, string $path2)
+function getFilesContent(array $files): array
 {
-    return [file_get_contents($path1), file_get_contents($path2)];
+    return array_map(
+        function ($filePath) {
+            return file_get_contents($filePath);
+        },
+        $files
+    );
 }

@@ -18,7 +18,6 @@ class ASTBuilderTest extends TestCase
         $excepted = ['state' => STR_STATUS_IDENTICAL, 'key' => 'key', 'value' => 'val', 'children' => null];
         $actual = buildResultValue(STR_STATUS_IDENTICAL, 'key', 'val');
         $this->assertEquals($excepted, $actual);
-
     }
 
 

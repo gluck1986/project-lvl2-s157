@@ -2,36 +2,48 @@
 
 namespace GenDiff\Validators;
 
-use function GenDiff\Differ\getExtToActionArray;
+use GenDiff\GenDiffException;
 use function GenDiff\FSFunctions\findNotExistsFiles;
 use function GenDiff\FSFunctions\getExt;
 
-function isEqualExt(string $path1, string $path2): bool
+function isEqualExt(array $files): bool
 {
-    return getExt($path1) === getExt($path2);
+    return array_reduce(
+        $files,
+        function ($acc, $filePath) {
+            if (is_null($acc['last'])) {
+                $acc['last'] = getExt($filePath);
+            } elseif ($acc['result'] === true
+                && $acc['last'] !== getExt($filePath)
+            ) {
+                $acc['result'] = false;
+            }
+
+            return $acc;
+        },
+        ['last' => null, 'result' => true]
+    )['result'];
 }
 
-function validateFiles($filePath1, $filePath2): array
+function validateFiles($files): array
 {
-    $notFindPaths = findNotExistsFiles([$filePath1, $filePath2]);
+    $notFindPaths = findNotExistsFiles($files);
     if (count($notFindPaths) > 0) {
-        return array_map(
+        $errs = array_map(
             function ($path) {
                 return 'Файл не найден: "' . $path . '"';
             },
             $notFindPaths
         );
-    }
-    if (!isEqualExt($filePath1, $filePath2)) {
-        return ['Расширения файлов не совпадают'];
-    }
-    $ext = getExt($filePath1);
 
-    if (mb_strlen($ext) === 0) {
-        return ['У файлов отсутствует расширение'];
+        throw new GenDiffException(implode(', ', $errs));
     }
-    if (!array_key_exists($ext, getExtToActionArray())) {
-        return ['Не известный формат файлов: ' . $ext];
+    if (!isEqualExt($files)) {
+        throw new GenDiffException('Расширения файлов не совпадают');
+    }
+    $ext = getExt(reset($files));
+    if (mb_strlen($ext) === 0) {
+        throw new GenDiffException('У файлов отсутствует расширение');
     }
 
     return [];

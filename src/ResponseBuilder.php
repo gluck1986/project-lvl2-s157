@@ -7,11 +7,6 @@ use const GenDiff\ASTDefines\STR_STATUS_ADDED;
 use const GenDiff\ASTDefines\STR_STATUS_IDENTICAL;
 use const GenDiff\ASTDefines\STR_STATUS_REMOVED;
 
-function buildErrResponse(array $errs)
-{
-    return 'Ошибка: ' . implode(', ', $errs) . PHP_EOL;
-}
-
 function generateSpaces($count)
 {
     return implode(' ', array_fill(0, $count + 1, ''));
