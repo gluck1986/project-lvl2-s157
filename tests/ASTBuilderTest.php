@@ -8,7 +8,7 @@ use const GenDiff\ASTDefines\STR_STATUS_ADDED;
 use const GenDiff\ASTDefines\STR_STATUS_IDENTICAL;
 use const GenDiff\ASTDefines\STR_STATUS_REMOVED;
 use function GenDiff\ASTBuilder\build;
-use function GenDiff\ASTBuilder\buildResultValue;
+use function GenDiff\ASTBuilder\buildLeaf;
 
 class ASTBuilderTest extends TestCase
 {
@@ -16,7 +16,7 @@ class ASTBuilderTest extends TestCase
     public function testBuildResultValue()
     {
         $excepted = ['state' => STR_STATUS_IDENTICAL, 'key' => 'key', 'value' => 'val', 'children' => null];
-        $actual = buildResultValue(STR_STATUS_IDENTICAL, 'key', 'val');
+        $actual = buildLeaf(STR_STATUS_IDENTICAL, 'key', 'val');
         $this->assertEquals($excepted, $actual);
     }
 
