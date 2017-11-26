@@ -2,10 +2,16 @@
 
 namespace GenDiff\ResponseBuilder;
 
+use const GenDiff\ASTDefines\KEY_DATA_AFTER;
+use const GenDiff\ASTDefines\KEY_DATA_BEFORE;
+use const GenDiff\ASTDefines\KEY_KEY;
+use const GenDiff\ASTDefines\KEY_STATE;
 use const GenDiff\ASTDefines\RESPONSE_SPACES_NEXT_LEVEL;
-use const GenDiff\ASTDefines\STR_STATUS_ADDED;
-use const GenDiff\ASTDefines\STR_STATUS_IDENTICAL;
-use const GenDiff\ASTDefines\STR_STATUS_REMOVED;
+use const GenDiff\ASTDefines\STATE_ADDED;
+use const GenDiff\ASTDefines\STATE_NESTED_AFTER;
+use const GenDiff\ASTDefines\STATE_NESTED_BEFORE;
+use const GenDiff\ASTDefines\STATE_REMOVED;
+use const GenDiff\ASTDefines\STATE_UPDATED;
 
 function generateSpaces($count)
 {
@@ -16,38 +22,84 @@ function buildResponse(array $results, int $spaces = 0): string
 {
     $resultString = implode(
         PHP_EOL,
-        array_map(
-            function ($itemArr) use ($spaces) {
-                return generateSpaces($spaces)
-                    . getStatusLabel($itemArr['state'])
-                    . '"' . $itemArr['key'] . '": '
-                    . (($itemArr['children'])
-                        ? buildResponse($itemArr['children'], $spaces + RESPONSE_SPACES_NEXT_LEVEL)
-                        : buildResponseValue($itemArr['value']));
+        array_reduce(
+            $results,
+            function ($result, $itemArr) use ($spaces) {
+                if ($itemArr[KEY_STATE] & STATE_ADDED) {
+                    $result[] = generateSpaces($spaces)
+                        . getStatusLabel($itemArr[KEY_STATE])
+                        . '"' . $itemArr[KEY_KEY] . '": '
+                        . buildResponseValue(
+                            $itemArr[KEY_DATA_AFTER],
+                            $itemArr[KEY_STATE] & STATE_NESTED_AFTER,
+                            $spaces + RESPONSE_SPACES_NEXT_LEVEL
+                        );
+                } elseif ($itemArr[KEY_STATE] & STATE_REMOVED) {
+                    $result[] = generateSpaces($spaces)
+                        . getStatusLabel($itemArr[KEY_STATE])
+                        . '"' . $itemArr[KEY_KEY] . '": '
+                        . buildResponseValue(
+                            $itemArr[KEY_DATA_BEFORE],
+                            $itemArr[KEY_STATE] & STATE_NESTED_BEFORE,
+                            $spaces + RESPONSE_SPACES_NEXT_LEVEL
+                        );
+                } elseif ($itemArr[KEY_STATE] & STATE_UPDATED) {
+                    $result[] = generateSpaces($spaces)
+                        . getStatusLabel(STATE_REMOVED)
+                        . '"' . $itemArr[KEY_KEY] . '": '
+                        . buildResponseValue(
+                            $itemArr[KEY_DATA_BEFORE],
+                            $itemArr[KEY_STATE] & STATE_NESTED_BEFORE,
+                            $spaces + RESPONSE_SPACES_NEXT_LEVEL
+                        );
+
+                    $result[] = generateSpaces($spaces)
+                        . getStatusLabel(STATE_ADDED)
+                        . '"' . $itemArr[KEY_KEY] . '": '
+                        . buildResponseValue(
+                            $itemArr[KEY_DATA_AFTER],
+                            $itemArr[KEY_STATE] & STATE_NESTED_AFTER,
+                            $spaces + RESPONSE_SPACES_NEXT_LEVEL
+                        );
+                } else {
+                    $result[] = generateSpaces($spaces)
+                        . getStatusLabel($itemArr[KEY_STATE])
+                        . '"' . $itemArr[KEY_KEY] . '": '
+                        . buildResponseValue(
+                            $itemArr[KEY_DATA_BEFORE],
+                            $itemArr[KEY_STATE] & STATE_NESTED_BEFORE,
+                            $spaces + RESPONSE_SPACES_NEXT_LEVEL
+                        );
+                }
+
+                return $result;
             },
-            $results
+            []
         )
     );
 
     return '{' . PHP_EOL . $resultString . PHP_EOL . generateSpaces($spaces) . '}';
 }
 
-function buildResponseValue($value)
+function buildResponseValue($data, $nested, $spaces)
 {
-    if (is_bool($value)) {
-        return ($value ? 'true' : 'false');
+    if ($nested) {
+        return buildResponse($data, $spaces);
+    }
+    if (is_bool($data)) {
+        return ($data ? 'true' : 'false');
     } else {
-        return '"' . $value . '"';
+        return '"' . $data . '"';
     }
 }
 
-function getStatusLabel(string $status): string
+function getStatusLabel(int $status): string
 {
-    $statusLabels = [
-        STR_STATUS_ADDED => '  + ',
-        STR_STATUS_REMOVED => '  - ',
-        STR_STATUS_IDENTICAL => '    ',
-    ];
-
-    return $statusLabels[$status];
+    if ($status & STATE_ADDED) {
+        return '  + ';
+    } elseif ($status & STATE_REMOVED) {
+        return '  - ';
+    } else {
+        return '    ';
+    }
 }

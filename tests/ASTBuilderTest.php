@@ -2,57 +2,31 @@
 
 namespace GenDiff\Tests;
 
-
 use PHPUnit\Framework\TestCase;
-use const GenDiff\ASTDefines\STR_STATUS_ADDED;
-use const GenDiff\ASTDefines\STR_STATUS_IDENTICAL;
-use const GenDiff\ASTDefines\STR_STATUS_REMOVED;
+use const GenDiff\ASTDefines\STATE_ADDED;
+use const GenDiff\ASTDefines\STATE_IDENTICAL;
+use const GenDiff\ASTDefines\STATE_NESTED_AFTER;
+use const GenDiff\ASTDefines\STATE_NESTED_BEFORE;
+use const GenDiff\ASTDefines\STATE_REMOVED;
+use const GenDiff\ASTDefines\STATE_UPDATED;
 use function GenDiff\ASTBuilder\build;
-use function GenDiff\ASTBuilder\buildLeaf;
 
 class ASTBuilderTest extends TestCase
 {
-
-    public function testBuildResultValue()
-    {
-        $excepted = ['state' => STR_STATUS_IDENTICAL, 'key' => 'key', 'value' => 'val', 'children' => null];
-        $actual = buildLeaf(STR_STATUS_IDENTICAL, 'key', 'val');
-        $this->assertEquals($excepted, $actual);
-    }
-
-
     public function identDataProvider(): array
     {
         return [
             [
                 ['key1' => 'val1'],
                 ['key1' => 'val1'],
-                [['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1', 'children' => null]]
+                [['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1']]
             ],
             [
                 ['key1' => 'val1', 'key2' => 'val2',],
                 ['key1' => 'val1', 'key2' => 'val2',],
                 [
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key2', 'value' => 'val2', 'children' => null],
-                ]
-            ],
-            [
-                ['key1' => 'val1', 'key2' => 'val2',],
-                ['key2' => 'val2', 'key1' => 'val1',],
-                [
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key2', 'value' => 'val2', 'children' => null],
-                ]
-            ],
-            [
-                ['key1' => 'val1', 'key2' => 'val2', 'key3' => 'val3', 'key4' => 'val4'],
-                ['key2' => 'val2', 'key1' => 'val1', 'key3' => 'val3', 'key4' => 'val4'],
-                [
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key2', 'value' => 'val2', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key3', 'value' => 'val3', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key4', 'value' => 'val4', 'children' => null],
+                    ['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1',],
+                    ['state' => STATE_IDENTICAL, 'key' => 'key2', 'dataBefore' => 'val2', 'dataAfter' => 'val2'],
                 ]
             ],
             [[], [], []],
@@ -66,32 +40,14 @@ class ASTBuilderTest extends TestCase
             [
                 [],
                 ['key1' => 'val1'],
-                [['state' => STR_STATUS_ADDED, 'key' => 'key1', 'value' => 'val1', 'children' => null]]
+                [['state' => STATE_ADDED, 'key' => 'key1', 'dataBefore' => null, 'dataAfter' => 'val1']]
             ],
             [
                 ['key1' => 'val1'],
                 ['key1' => 'val1', 'key2' => 'val2',],
                 [
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                    ['state' => STR_STATUS_ADDED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
-                ]
-            ],
-            [
-                [],
-                ['key2' => 'val2', 'key1' => 'val1',],
-                [
-                    ['state' => STR_STATUS_ADDED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
-                    ['state' => STR_STATUS_ADDED, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                ]
-            ],
-            [
-                ['key1' => 'val1', 'key3' => 'val3', 'key4' => 'val4',],
-                ['key2' => 'val2', 'key1' => 'val1', 'key3' => 'val3', 'key4' => 'val4',],
-                [
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key3', 'value' => 'val3', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key4', 'value' => 'val4', 'children' => null],
-                    ['state' => STR_STATUS_ADDED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
+                    ['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1'],
+                    ['state' => STATE_ADDED, 'key' => 'key2', 'dataBefore' => null, 'dataAfter' => 'val2'],
                 ]
             ],
             [[], [], []],
@@ -105,33 +61,22 @@ class ASTBuilderTest extends TestCase
             [
                 ['key1' => 'val1'],
                 [],
-                [['state' => STR_STATUS_REMOVED, 'key' => 'key1', 'value' => 'val1', 'children' => null]]
+                [['state' => STATE_REMOVED, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => null]]
             ],
             [
                 ['key1' => 'val1', 'key2' => 'val2',],
                 ['key1' => 'val1'],
                 [
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
+                    ['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1'],
+                    ['state' => STATE_REMOVED, 'key' => 'key2', 'dataBefore' => 'val2', 'dataAfter' => null],
                 ]
             ],
             [
                 ['key2' => 'val2', 'key1' => 'val1',],
                 [],
                 [
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                ]
-            ],
-            [
-                ['key2' => 'val2', 'key1' => 'val1', 'key3' => 'val3', 'key4' => 'val4',],
-                ['key1' => 'val1', 'key3' => 'val3', 'key4' => 'val4',],
-
-                [
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key3', 'value' => 'val3', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key4', 'value' => 'val4', 'children' => null],
+                    ['state' => STATE_REMOVED, 'key' => 'key2', 'dataBefore' => 'val2', 'dataAfter' => null],
+                    ['state' => STATE_REMOVED, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => null],
                 ]
             ],
             [[], [], []],
@@ -146,10 +91,11 @@ class ASTBuilderTest extends TestCase
                 ['key1' => 'val1', 'key2' => ['key1' => 'val1']],
                 [],
                 [
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key2', 'value' => null, 'children' => [
-                        ['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1', 'children' => null]
-                    ]
+                    ['state' => STATE_REMOVED, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => null],
+                    ['state' => STATE_REMOVED + STATE_NESTED_BEFORE, 'key' => 'key2', 'dataBefore' => [
+                        ['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1']
+                    ],
+                        'dataAfter' => null
                     ]
                 ]
             ],
@@ -161,19 +107,14 @@ class ASTBuilderTest extends TestCase
                     ]
                 ],
                 [
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                    ['state' => STR_STATUS_ADDED, 'key' => 'key1', 'value' => null, 'children' => [
-                        ['state' => STR_STATUS_IDENTICAL, 'key' => 'key2', 'value' => 'val2', 'children' => null],
-                    ]],
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
-                ]
-            ],
-            [
-                ['key2' => 'val2', 'key1' => 'val1',],
-                [],
-                [
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key1', 'value' => 'val1', 'children' => null],
+                    ['state' => STATE_UPDATED + STATE_NESTED_AFTER, 'key' => 'key1', 'dataBefore' => 'val1',
+                        'dataAfter' => [[
+                            'state' => STATE_IDENTICAL,
+                            'key' => 'key2',
+                            'dataBefore' => 'val2',
+                            'dataAfter' => 'val2'
+                        ]]],
+                    ['state' => STATE_REMOVED, 'key' => 'key2', 'dataBefore' => 'val2', 'dataAfter' => null],
                 ]
             ],
             [
@@ -185,52 +126,21 @@ class ASTBuilderTest extends TestCase
                 ],],
 
                 [
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key3', 'value' => 'val3', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key4', 'value' => null, 'children' => [
-                        ['state' => STR_STATUS_IDENTICAL, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                        ['state' => STR_STATUS_REMOVED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
-                        ['state' => STR_STATUS_ADDED, 'key' => 'key2', 'value' => 'val33', 'children' => null],
+                    ['state' => STATE_REMOVED, 'key' => 'key2', 'dataBefore' => 'val2', 'dataAfter' => null],
+                    ['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1'],
+                    ['state' => STATE_IDENTICAL, 'key' => 'key3', 'dataBefore' => 'val3', 'dataAfter' => 'val3'],
+                    ['state' => STATE_IDENTICAL + STATE_NESTED_BEFORE + STATE_NESTED_AFTER,
+                        'key' => 'key4', 'dataBefore' => [
+                        ['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1'],
+                        ['state' => STATE_UPDATED, 'key' => 'key2', 'dataBefore' => 'val2', 'dataAfter' => 'val33'],
 
-                    ]],
-                ]
-            ],
-            [[], [], []],
+                    ],
+                        'dataAfter' => [
+                            ['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1'],
+                            ['state' => STATE_UPDATED, 'key' => 'key2', 'dataBefore' => 'val2', 'dataAfter' => 'val33'],
+                        ],
 
-        ];
-    }
-
-    public function diffDataProvider(): array
-    {
-        return [
-            [
-                ['key1' => 'val1'],
-                ['key1' => 'val2'],
-                [
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                    ['state' => STR_STATUS_ADDED, 'key' => 'key1', 'value' => 'val2', 'children' => null]
-                ]
-            ],
-            [
-                ['key1' => 'val1', 'key2' => 'val2',],
-                ['key1' => 'val2'],
-                [
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                    ['state' => STR_STATUS_ADDED, 'key' => 'key1', 'value' => 'val2', 'children' => null],
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
-                ]
-            ],
-            [
-                ['key2' => 'val2', 'key1' => 'val6', 'key3' => 'val3', 'key4' => 'val4',],
-                ['key1' => 'val1', 'key3' => 'val3', 'key4' => 'val4',],
-
-                [
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key2', 'value' => 'val2', 'children' => null],
-                    ['state' => STR_STATUS_REMOVED, 'key' => 'key1', 'value' => 'val6', 'children' => null],
-                    ['state' => STR_STATUS_ADDED, 'key' => 'key1', 'value' => 'val1', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key3', 'value' => 'val3', 'children' => null],
-                    ['state' => STR_STATUS_IDENTICAL, 'key' => 'key4', 'value' => 'val4', 'children' => null],
+                    ],
                 ]
             ],
             [[], [], []],
@@ -257,14 +167,6 @@ class ASTBuilderTest extends TestCase
     {
         $actual = build($first, $second);
         $this->assertEquals($excepted, $actual, 'delete');
-    }
-
-    /** @dataProvider diffDataProvider */
-    public function testDiff($first, $second, $excepted)
-    {
-
-        $actual = build($first, $second);
-        $this->assertEquals($excepted, $actual, 'diff');
     }
 
     /** @dataProvider diffMultiLevelDataProvider */
