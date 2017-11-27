@@ -35,12 +35,16 @@ function buildResponse(array $ast, $format = FORMAT_PRETTY)
 
 function buildPlain(array $ast)
 {
-    return implode(PHP_EOL, array_map(
-            function ($val) {
-                return 'Property \'' . $val['label'] . '\' ' . $val['state'];
-            },
-            buildPlainArr($ast)
-        )) . PHP_EOL;
+    return
+        implode(
+            PHP_EOL,
+            array_map(
+                function ($val) {
+                    return 'Property \'' . $val['label'] . '\' ' . $val['state'];
+                },
+                buildPlainArr($ast)
+            )
+        ) . PHP_EOL;
 }
 
 function buildPlainArr(array $ast)

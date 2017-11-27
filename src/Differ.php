@@ -20,4 +20,3 @@ function genDiff($file1, $file2, $format = FORMAT_PRETTY)
 
     return buildResponse($ast, $format);
 }
-
