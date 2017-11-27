@@ -19,3 +19,4 @@ const KEY_LABEL = 'label';
 
 const FORMAT_PRETTY = 'pretty';
 const FORMAT_PLAIN = 'plain';
+const FORMAT_JSON = 'json';

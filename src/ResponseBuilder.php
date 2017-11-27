@@ -3,6 +3,7 @@
 namespace GenDiff\ResponseBuilder;
 
 use GenDiff\GenDiffException;
+use const GenDiff\ASTDefines\FORMAT_JSON;
 use const GenDiff\ASTDefines\FORMAT_PLAIN;
 use const GenDiff\ASTDefines\FORMAT_PRETTY;
 use const GenDiff\ASTDefines\KEY_DATA_AFTER;
@@ -30,8 +31,15 @@ function buildResponse(array $ast, $format = FORMAT_PRETTY)
         return buildPretty($ast);
     } elseif ($format === FORMAT_PLAIN) {
         return buildPlain($ast);
+    } elseif ($format === FORMAT_JSON) {
+        return buildJSON($ast);
     }
     throw new GenDiffException('Не известный формат: ' . $format);
+}
+
+function buildJSON(array $ast)
+{
+    return json_encode($ast);
 }
 
 function buildPlain(array $ast)

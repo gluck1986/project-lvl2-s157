@@ -11,7 +11,7 @@ namespace GenDiff\Tests;
 use PHPUnit\Framework\TestCase;
 use function GenDiff\Differ\genDiff;
 
-class PlainDifferTest  extends TestCase
+class PlainRespDifferTest  extends TestCase
 {
     public function testMultiJsonPlain()
     {
