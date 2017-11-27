@@ -8,6 +8,7 @@ use const GenDiff\ASTDefines\FORMAT_PRETTY;
 use const GenDiff\ASTDefines\KEY_DATA_AFTER;
 use const GenDiff\ASTDefines\KEY_DATA_BEFORE;
 use const GenDiff\ASTDefines\KEY_KEY;
+use const GenDiff\ASTDefines\KEY_LABEL;
 use const GenDiff\ASTDefines\KEY_STATE;
 use const GenDiff\ASTDefines\RESPONSE_SPACES_NEXT_LEVEL;
 use const GenDiff\ASTDefines\STATE_ADDED;
@@ -40,7 +41,7 @@ function buildPlain(array $ast)
             PHP_EOL,
             array_map(
                 function ($val) {
-                    return 'Property \'' . $val['label'] . '\' ' . $val['state'];
+                    return 'Property \'' . $val[KEY_LABEL] . '\' ' . $val[KEY_STATE];
                 },
                 buildPlainArr($ast)
             )
@@ -54,38 +55,38 @@ function buildPlainArr(array $ast)
         function ($result, $node) {
             $label = $node[KEY_KEY];
             if ($node[KEY_STATE] & STATE_REMOVED) {
-                $result[] = ['label' => $label, 'state' => 'was removed'];
+                $result[] = [KEY_LABEL => $label, KEY_STATE => 'was removed'];
             }
             if ($node[KEY_STATE] & STATE_ADDED) {
                 $label = $node[KEY_KEY];
                 if ($node[KEY_STATE] & STATE_NESTED_AFTER) {
                     $result[] = [
-                        'label' => $label,
-                        'state' => 'was added with value: \'complex value\''
+                        KEY_LABEL => $label,
+                        KEY_STATE => 'was added with value: \'complex value\''
                     ];
                 } else {
                     $result[] = [
-                        'label' => $label,
-                        'state' => 'was added with value: \'' . $node[KEY_DATA_AFTER] . '\''
+                        KEY_LABEL => $label,
+                        KEY_STATE => 'was added with value: \'' . $node[KEY_DATA_AFTER] . '\''
                     ];
                 }
             }
             if ($node[KEY_STATE] & STATE_UPDATED) {
                 if ($node[KEY_STATE] & STATE_NESTED_BEFORE) {
                     $result[] = [
-                        'label' => $label,
-                        'state' => 'was changed. From: \'complex value\' to \'' . $node[KEY_DATA_AFTER] . '\''
+                        KEY_LABEL => $label,
+                        KEY_STATE => 'was changed. From: \'complex value\' to \'' . $node[KEY_DATA_AFTER] . '\''
                     ];
                 } elseif ($node[KEY_STATE] & STATE_NESTED_AFTER) {
                     $result[] = [
-                        'label' => $label,
-                        'state' => 'was changed. From: \'' . $node[KEY_DATA_BEFORE] . '\''
+                        KEY_LABEL => $label,
+                        KEY_STATE => 'was changed. From: \'' . $node[KEY_DATA_BEFORE] . '\''
                             . ' to \'complex value\''
                     ];
                 } else {
                     $result[] = [
-                        'label' => $label,
-                        'state' => 'was changed. From: \''
+                        KEY_LABEL => $label,
+                        KEY_STATE => 'was changed. From: \''
                             . $node[KEY_DATA_BEFORE] . '\''
                             . ' to \'' . $node[KEY_DATA_AFTER] . '\''
                     ];
@@ -100,7 +101,7 @@ function buildPlainArr(array $ast)
                         $result,
                         array_map(
                             function ($val) use ($label) {
-                                $val['label'] = $label . '.' . $val['label'];
+                                $val[KEY_LABEL] = $label . '.' . $val[KEY_LABEL];
 
                                 return $val;
                             },
