@@ -15,3 +15,6 @@ const KEY_KEY = 'key';
 const KEY_STATE = 'state';
 const KEY_DATA_BEFORE = 'dataBefore';
 const KEY_DATA_AFTER = 'dataAfter';
+
+const FORMAT_PRETTY = 'pretty';
+const FORMAT_PLAIN = 'plain';

@@ -29,7 +29,8 @@
       "src\\Validators.php",
       "src\\ASTDefines.php",
       "src\\ASTBuilder.php",
-      "src\\ResponseBuilder.php"
+      "src\\ResponseBuilder.php",
+      "src\\Parser.php"
     ]
   },
   "require": {

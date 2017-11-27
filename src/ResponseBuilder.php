@@ -2,12 +2,16 @@
 
 namespace GenDiff\ResponseBuilder;
 
+use GenDiff\GenDiffException;
+use const GenDiff\ASTDefines\FORMAT_PLAIN;
+use const GenDiff\ASTDefines\FORMAT_PRETTY;
 use const GenDiff\ASTDefines\KEY_DATA_AFTER;
 use const GenDiff\ASTDefines\KEY_DATA_BEFORE;
 use const GenDiff\ASTDefines\KEY_KEY;
 use const GenDiff\ASTDefines\KEY_STATE;
 use const GenDiff\ASTDefines\RESPONSE_SPACES_NEXT_LEVEL;
 use const GenDiff\ASTDefines\STATE_ADDED;
+use const GenDiff\ASTDefines\STATE_IDENTICAL;
 use const GenDiff\ASTDefines\STATE_NESTED_AFTER;
 use const GenDiff\ASTDefines\STATE_NESTED_BEFORE;
 use const GenDiff\ASTDefines\STATE_REMOVED;
@@ -18,56 +22,147 @@ function generateSpaces($count)
     return implode(' ', array_fill(0, $count + 1, ''));
 }
 
-function buildResponse(array $results, int $spaces = 0): string
+
+function buildResponse(array $ast, $format = FORMAT_PRETTY)
+{
+    if ($format === FORMAT_PRETTY) {
+        return buildPretty($ast);
+    } elseif ($format === FORMAT_PLAIN) {
+        return buildPlain($ast);
+    }
+    throw new GenDiffException('Не известный формат: ' . $format);
+}
+
+function buildPlain(array $ast)
+{
+    return implode(PHP_EOL, array_map(
+            function ($val) {
+                return 'Property \'' . $val['label'] . '\' ' . $val['state'];
+            },
+            buildPlainArr($ast)
+        )) . PHP_EOL;
+}
+
+function buildPlainArr(array $ast)
+{
+    return array_reduce(
+        $ast,
+        function ($result, $node) {
+            $label = $node[KEY_KEY];
+            if ($node[KEY_STATE] & STATE_REMOVED) {
+                $result[] = ['label' => $label, 'state' => 'was removed'];
+            }
+            if ($node[KEY_STATE] & STATE_ADDED) {
+                $label = $node[KEY_KEY];
+                if ($node[KEY_STATE] & STATE_NESTED_AFTER) {
+                    $result[] = [
+                        'label' => $label,
+                        'state' => 'was added with value: \'complex value\''
+                    ];
+                } else {
+                    $result[] = [
+                        'label' => $label,
+                        'state' => 'was added with value: \'' . $node[KEY_DATA_AFTER] . '\''
+                    ];
+                }
+            }
+            if ($node[KEY_STATE] & STATE_UPDATED) {
+                if ($node[KEY_STATE] & STATE_NESTED_BEFORE) {
+                    $result[] = [
+                        'label' => $label,
+                        'state' => 'was changed. From: \'complex value\' to \'' . $node[KEY_DATA_AFTER] . '\''
+                    ];
+                } elseif ($node[KEY_STATE] & STATE_NESTED_AFTER) {
+                    $result[] = [
+                        'label' => $label,
+                        'state' => 'was changed. From: \'' . $node[KEY_DATA_BEFORE] . '\''
+                            . ' to \'complex value\''
+                    ];
+                } else {
+                    $result[] = [
+                        'label' => $label,
+                        'state' => 'was changed. From: \''
+                            . $node[KEY_DATA_BEFORE] . '\''
+                            . ' to \'' . $node[KEY_DATA_AFTER] . '\''
+                    ];
+                }
+            }
+            if ($node[KEY_STATE] & STATE_IDENTICAL
+                && $node[KEY_STATE] & STATE_NESTED_BEFORE
+                && $node[KEY_STATE] & STATE_NESTED_AFTER) {
+                $nested = buildPlainArr($node[KEY_DATA_BEFORE]);
+                if (count($nested) > 0) {
+                    $result = array_merge(
+                        $result,
+                        array_map(
+                            function ($val) use ($label) {
+                                $val['label'] = $label . '.' . $val['label'];
+
+                                return $val;
+                            },
+                            $nested
+                        )
+                    );
+                }
+            }
+
+            return $result;
+        },
+        []
+    );
+}
+
+
+function buildPretty(array $ast, int $spaces = 0): string
 {
     $resultString = implode(
         PHP_EOL,
         array_reduce(
-            $results,
-            function ($result, $itemArr) use ($spaces) {
-                if ($itemArr[KEY_STATE] & STATE_ADDED) {
+            $ast,
+            function ($result, $node) use ($spaces) {
+                if ($node[KEY_STATE] & STATE_ADDED) {
                     $result[] = generateSpaces($spaces)
-                        . getStatusLabel($itemArr[KEY_STATE])
-                        . '"' . $itemArr[KEY_KEY] . '": '
-                        . buildResponseValue(
-                            $itemArr[KEY_DATA_AFTER],
-                            $itemArr[KEY_STATE] & STATE_NESTED_AFTER,
+                        . getPrettyStatusLabel($node[KEY_STATE])
+                        . '"' . $node[KEY_KEY] . '": '
+                        . buildPrettyValue(
+                            $node[KEY_DATA_AFTER],
+                            $node[KEY_STATE] & STATE_NESTED_AFTER,
                             $spaces + RESPONSE_SPACES_NEXT_LEVEL
                         );
-                } elseif ($itemArr[KEY_STATE] & STATE_REMOVED) {
+                } elseif ($node[KEY_STATE] & STATE_REMOVED) {
                     $result[] = generateSpaces($spaces)
-                        . getStatusLabel($itemArr[KEY_STATE])
-                        . '"' . $itemArr[KEY_KEY] . '": '
-                        . buildResponseValue(
-                            $itemArr[KEY_DATA_BEFORE],
-                            $itemArr[KEY_STATE] & STATE_NESTED_BEFORE,
+                        . getPrettyStatusLabel($node[KEY_STATE])
+                        . '"' . $node[KEY_KEY] . '": '
+                        . buildPrettyValue(
+                            $node[KEY_DATA_BEFORE],
+                            $node[KEY_STATE] & STATE_NESTED_BEFORE,
                             $spaces + RESPONSE_SPACES_NEXT_LEVEL
                         );
-                } elseif ($itemArr[KEY_STATE] & STATE_UPDATED) {
+                } elseif ($node[KEY_STATE] & STATE_UPDATED) {
                     $result[] = generateSpaces($spaces)
-                        . getStatusLabel(STATE_REMOVED)
-                        . '"' . $itemArr[KEY_KEY] . '": '
-                        . buildResponseValue(
-                            $itemArr[KEY_DATA_BEFORE],
-                            $itemArr[KEY_STATE] & STATE_NESTED_BEFORE,
+                        . getPrettyStatusLabel(STATE_REMOVED)
+                        . '"' . $node[KEY_KEY] . '": '
+                        . buildPrettyValue(
+                            $node[KEY_DATA_BEFORE],
+                            $node[KEY_STATE] & STATE_NESTED_BEFORE,
                             $spaces + RESPONSE_SPACES_NEXT_LEVEL
                         );
 
                     $result[] = generateSpaces($spaces)
-                        . getStatusLabel(STATE_ADDED)
-                        . '"' . $itemArr[KEY_KEY] . '": '
-                        . buildResponseValue(
-                            $itemArr[KEY_DATA_AFTER],
-                            $itemArr[KEY_STATE] & STATE_NESTED_AFTER,
+                        . getPrettyStatusLabel(STATE_ADDED)
+                        . '"' . $node[KEY_KEY] . '": '
+                        . buildPrettyValue(
+                            $node[KEY_DATA_AFTER],
+                            $node[KEY_STATE] & STATE_NESTED_AFTER,
                             $spaces + RESPONSE_SPACES_NEXT_LEVEL
                         );
                 } else {
                     $result[] = generateSpaces($spaces)
-                        . getStatusLabel($itemArr[KEY_STATE])
-                        . '"' . $itemArr[KEY_KEY] . '": '
-                        . buildResponseValue(
-                            $itemArr[KEY_DATA_BEFORE],
-                            $itemArr[KEY_STATE] & STATE_NESTED_BEFORE,
+                        . getPrettyStatusLabel($node[KEY_STATE])
+                        . '"' . $node[KEY_KEY] . '": '
+                        . buildPrettyValue(
+                            $node[KEY_DATA_BEFORE],
+                            $node[KEY_STATE] & STATE_NESTED_BEFORE,
                             $spaces + RESPONSE_SPACES_NEXT_LEVEL
                         );
                 }
@@ -81,10 +176,10 @@ function buildResponse(array $results, int $spaces = 0): string
     return '{' . PHP_EOL . $resultString . PHP_EOL . generateSpaces($spaces) . '}';
 }
 
-function buildResponseValue($data, $nested, $spaces)
+function buildPrettyValue($data, $nested, $spaces)
 {
     if ($nested) {
-        return buildResponse($data, $spaces);
+        return buildPretty($data, $spaces);
     }
     if (is_bool($data)) {
         return ($data ? 'true' : 'false');
@@ -93,7 +188,7 @@ function buildResponseValue($data, $nested, $spaces)
     }
 }
 
-function getStatusLabel(int $status): string
+function getPrettyStatusLabel(int $status): string
 {
     if ($status & STATE_ADDED) {
         return '  + ';

@@ -21,7 +21,7 @@ function runDiffer()
 {
     list($firstPath, $secondPath, $format) = route();
 
-    return genDiff($firstPath, $secondPath);
+    return genDiff($firstPath, $secondPath, $format);
 }
 
 function getDoc(): string
