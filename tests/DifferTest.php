@@ -52,16 +52,6 @@ TEXT;
         $this->assertEquals($expected, $result);
     }
 
-    public function testWrongFiles2()
-    {
-        $before = __DIR__ . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'before.json';
-        $after = __DIR__ . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'after.yml';
-
-        $this->expectException(GenDiffException::class);
-        $this->expectExceptionMessage('Расширения файлов не совпадают');
-        genDiff($before, $after);
-    }
-
     public function testYaml()
     {
         $before = __DIR__ . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'before.yml';
