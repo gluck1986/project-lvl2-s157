@@ -2,7 +2,7 @@
 
 namespace GenDiff\Cli;
 
-use function GenDiff\CliAdapter\genDiff;
+use function GenDiff\CliMiddleware\genDiff;
 
 function run()
 {

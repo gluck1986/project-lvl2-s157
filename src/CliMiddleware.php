@@ -1,6 +1,6 @@
 <?php
 
-namespace GenDiff\CliAdapter;
+namespace GenDiff\CliMiddleware;
 
 use Docopt\Handler;
 use function GenDiff\Differ\genDiff as differGenDiff;

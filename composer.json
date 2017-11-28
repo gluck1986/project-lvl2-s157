@@ -23,7 +23,7 @@
     },
     "files": [
       "src\\Cli.php",
-      "src\\CliAdapter.php",
+      "src\\CliMiddleware.php",
       "src\\Differ.php",
       "src\\ASTBuilder.php",
       "src\\ResponseBuilder.php",
