@@ -3,21 +3,22 @@
 namespace GenDiff\ResponseBuilder;
 
 use GenDiff\GenDiffException;
-use const GenDiff\ASTDefines\FORMAT_JSON;
-use const GenDiff\ASTDefines\FORMAT_PLAIN;
-use const GenDiff\ASTDefines\FORMAT_PRETTY;
-use const GenDiff\ASTDefines\KEY_DATA_AFTER;
-use const GenDiff\ASTDefines\KEY_DATA_BEFORE;
-use const GenDiff\ASTDefines\KEY_KEY;
-use const GenDiff\ASTDefines\KEY_LABEL;
-use const GenDiff\ASTDefines\KEY_STATE;
-use const GenDiff\ASTDefines\RESPONSE_SPACES_NEXT_LEVEL;
-use const GenDiff\ASTDefines\STATE_ADDED;
-use const GenDiff\ASTDefines\STATE_IDENTICAL;
-use const GenDiff\ASTDefines\STATE_NESTED_AFTER;
-use const GenDiff\ASTDefines\STATE_NESTED_BEFORE;
-use const GenDiff\ASTDefines\STATE_REMOVED;
-use const GenDiff\ASTDefines\STATE_UPDATED;
+use const GenDiff\ASTBuilder\FORMAT_JSON;
+use const GenDiff\ASTBuilder\FORMAT_PLAIN;
+use const GenDiff\ASTBuilder\FORMAT_PRETTY;
+use const GenDiff\ASTBuilder\KEY_CHILDREN;
+use const GenDiff\ASTBuilder\KEY_KEY;
+use const GenDiff\ASTBuilder\KEY_TYPE;
+use const GenDiff\ASTBuilder\KEY_VALUE_AFTER;
+use const GenDiff\ASTBuilder\KEY_VALUE_BEFORE;
+use const GenDiff\ASTBuilder\TYPE_ADDED;
+use const GenDiff\ASTBuilder\TYPE_IDENTICAL;
+use const GenDiff\ASTBuilder\TYPE_REMOVED;
+use const GenDiff\ASTBuilder\TYPE_UPDATED;
+
+const KEY_RESPONSE_LABEL = 'label';
+const KEY_RESPONSE_STATE = 'state';
+const RESPONSE_SPACES_NEXT_LEVEL = 4;
 
 function generateSpaces($count)
 {
@@ -49,7 +50,7 @@ function buildPlain(array $ast)
             PHP_EOL,
             array_map(
                 function ($val) {
-                    return 'Property \'' . $val[KEY_LABEL] . '\' ' . $val[KEY_STATE];
+                    return 'Property \'' . $val[KEY_RESPONSE_LABEL] . '\' ' . $val[KEY_RESPONSE_STATE];
                 },
                 buildPlainArr($ast)
             )
@@ -62,54 +63,55 @@ function buildPlainArr(array $ast)
         $ast,
         function ($result, $node) {
             $label = $node[KEY_KEY];
-            if ($node[KEY_STATE] & STATE_REMOVED) {
-                $result[] = [KEY_LABEL => $label, KEY_STATE => 'was removed'];
+            if ($node[KEY_TYPE] === TYPE_REMOVED) {
+                $result[] = [KEY_RESPONSE_LABEL => $label, KEY_RESPONSE_STATE => 'was removed'];
             }
-            if ($node[KEY_STATE] & STATE_ADDED) {
+            if ($node[KEY_TYPE] === TYPE_ADDED) {
                 $label = $node[KEY_KEY];
-                if ($node[KEY_STATE] & STATE_NESTED_AFTER) {
+                if ($node[KEY_CHILDREN]) {
                     $result[] = [
-                        KEY_LABEL => $label,
-                        KEY_STATE => 'was added with value: \'complex value\''
+                        KEY_RESPONSE_LABEL => $label,
+                        KEY_RESPONSE_STATE => 'was added with value: \'complex value\''
                     ];
                 } else {
                     $result[] = [
-                        KEY_LABEL => $label,
-                        KEY_STATE => 'was added with value: \'' . $node[KEY_DATA_AFTER] . '\''
+                        KEY_RESPONSE_LABEL => $label,
+                        KEY_RESPONSE_STATE => 'was added with value: \'' . $node[KEY_VALUE_AFTER] . '\''
                     ];
                 }
             }
-            if ($node[KEY_STATE] & STATE_UPDATED) {
-                if ($node[KEY_STATE] & STATE_NESTED_BEFORE) {
+            if ($node[KEY_TYPE] === TYPE_UPDATED) {
+                if ($node[KEY_CHILDREN] && is_null($node[KEY_VALUE_BEFORE])) {
                     $result[] = [
-                        KEY_LABEL => $label,
-                        KEY_STATE => 'was changed. From: \'complex value\' to \'' . $node[KEY_DATA_AFTER] . '\''
+                        KEY_RESPONSE_LABEL => $label,
+                        KEY_RESPONSE_STATE => 'was changed. From: \'complex value\' to \''
+                            . $node[KEY_VALUE_AFTER] . '\''
                     ];
-                } elseif ($node[KEY_STATE] & STATE_NESTED_AFTER) {
+                } elseif ($node[KEY_CHILDREN] && is_null($node[KEY_VALUE_AFTER])) {
                     $result[] = [
-                        KEY_LABEL => $label,
-                        KEY_STATE => 'was changed. From: \'' . $node[KEY_DATA_BEFORE] . '\''
+                        KEY_RESPONSE_LABEL => $label,
+                        KEY_RESPONSE_STATE => 'was changed. From: \'' . $node[KEY_VALUE_BEFORE] . '\''
                             . ' to \'complex value\''
                     ];
                 } else {
                     $result[] = [
-                        KEY_LABEL => $label,
-                        KEY_STATE => 'was changed. From: \''
-                            . $node[KEY_DATA_BEFORE] . '\''
-                            . ' to \'' . $node[KEY_DATA_AFTER] . '\''
+                        KEY_RESPONSE_LABEL => $label,
+                        KEY_RESPONSE_STATE => 'was changed. From: \''
+                            . $node[KEY_VALUE_BEFORE] . '\''
+                            . ' to \'' . $node[KEY_VALUE_AFTER] . '\''
                     ];
                 }
             }
-            if ($node[KEY_STATE] & STATE_IDENTICAL
-                && $node[KEY_STATE] & STATE_NESTED_BEFORE
-                && $node[KEY_STATE] & STATE_NESTED_AFTER) {
-                $nested = buildPlainArr($node[KEY_DATA_BEFORE]);
+            if ($node[KEY_TYPE] === TYPE_IDENTICAL
+                && $node[KEY_CHILDREN]
+            ) {
+                $nested = buildPlainArr($node[KEY_CHILDREN]);
                 if (count($nested) > 0) {
                     $result = array_merge(
                         $result,
                         array_map(
                             function ($val) use ($label) {
-                                $val[KEY_LABEL] = $label . '.' . $val[KEY_LABEL];
+                                $val[KEY_RESPONSE_LABEL] = $label . '.' . $val[KEY_RESPONSE_LABEL];
 
                                 return $val;
                             },
@@ -133,49 +135,44 @@ function buildPretty(array $ast, int $spaces = 0): string
         array_reduce(
             $ast,
             function ($result, $node) use ($spaces) {
-                if ($node[KEY_STATE] & STATE_ADDED) {
+                if ($node[KEY_TYPE] === TYPE_ADDED) {
                     $result[] = generateSpaces($spaces)
-                        . getPrettyStatusLabel($node[KEY_STATE])
+                        . getPrettyStatusLabel($node[KEY_TYPE])
                         . '"' . $node[KEY_KEY] . '": '
                         . buildPrettyValue(
-                            $node[KEY_DATA_AFTER],
-                            $node[KEY_STATE] & STATE_NESTED_AFTER,
+                            $node[KEY_VALUE_AFTER] ?? $node[KEY_CHILDREN],
                             $spaces + RESPONSE_SPACES_NEXT_LEVEL
                         );
-                } elseif ($node[KEY_STATE] & STATE_REMOVED) {
+                } elseif ($node[KEY_TYPE] === TYPE_REMOVED) {
                     $result[] = generateSpaces($spaces)
-                        . getPrettyStatusLabel($node[KEY_STATE])
+                        . getPrettyStatusLabel($node[KEY_TYPE])
                         . '"' . $node[KEY_KEY] . '": '
                         . buildPrettyValue(
-                            $node[KEY_DATA_BEFORE],
-                            $node[KEY_STATE] & STATE_NESTED_BEFORE,
+                            $node[KEY_VALUE_BEFORE] ?? $node[KEY_CHILDREN],
                             $spaces + RESPONSE_SPACES_NEXT_LEVEL
                         );
-                } elseif ($node[KEY_STATE] & STATE_UPDATED) {
+                } elseif ($node[KEY_TYPE] === TYPE_UPDATED) {
                     $result[] = generateSpaces($spaces)
-                        . getPrettyStatusLabel(STATE_REMOVED)
+                        . getPrettyStatusLabel(TYPE_REMOVED)
                         . '"' . $node[KEY_KEY] . '": '
                         . buildPrettyValue(
-                            $node[KEY_DATA_BEFORE],
-                            $node[KEY_STATE] & STATE_NESTED_BEFORE,
+                            $node[KEY_VALUE_BEFORE] ?? $node[KEY_CHILDREN],
                             $spaces + RESPONSE_SPACES_NEXT_LEVEL
                         );
 
                     $result[] = generateSpaces($spaces)
-                        . getPrettyStatusLabel(STATE_ADDED)
+                        . getPrettyStatusLabel(TYPE_ADDED)
                         . '"' . $node[KEY_KEY] . '": '
                         . buildPrettyValue(
-                            $node[KEY_DATA_AFTER],
-                            $node[KEY_STATE] & STATE_NESTED_AFTER,
+                            $node[KEY_VALUE_AFTER] ?? $node[KEY_CHILDREN],
                             $spaces + RESPONSE_SPACES_NEXT_LEVEL
                         );
                 } else {
                     $result[] = generateSpaces($spaces)
-                        . getPrettyStatusLabel($node[KEY_STATE])
+                        . getPrettyStatusLabel($node[KEY_TYPE])
                         . '"' . $node[KEY_KEY] . '": '
                         . buildPrettyValue(
-                            $node[KEY_DATA_BEFORE],
-                            $node[KEY_STATE] & STATE_NESTED_BEFORE,
+                            $node[KEY_VALUE_BEFORE] ?? $node[KEY_CHILDREN],
                             $spaces + RESPONSE_SPACES_NEXT_LEVEL
                         );
                 }
@@ -189,9 +186,9 @@ function buildPretty(array $ast, int $spaces = 0): string
     return '{' . PHP_EOL . $resultString . PHP_EOL . generateSpaces($spaces) . '}';
 }
 
-function buildPrettyValue($data, $nested, $spaces)
+function buildPrettyValue($data, $spaces)
 {
-    if ($nested) {
+    if (is_array($data)) {
         return buildPretty($data, $spaces);
     }
     if (is_bool($data)) {
@@ -201,11 +198,11 @@ function buildPrettyValue($data, $nested, $spaces)
     }
 }
 
-function getPrettyStatusLabel(int $status): string
+function getPrettyStatusLabel(string $type): string
 {
-    if ($status & STATE_ADDED) {
+    if ($type === TYPE_ADDED) {
         return '  + ';
-    } elseif ($status & STATE_REMOVED) {
+    } elseif ($type === TYPE_REMOVED) {
         return '  - ';
     } else {
         return '    ';

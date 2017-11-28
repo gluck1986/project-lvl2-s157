@@ -3,12 +3,10 @@
 namespace GenDiff\Tests;
 
 use PHPUnit\Framework\TestCase;
-use const GenDiff\ASTDefines\STATE_ADDED;
-use const GenDiff\ASTDefines\STATE_IDENTICAL;
-use const GenDiff\ASTDefines\STATE_NESTED_AFTER;
-use const GenDiff\ASTDefines\STATE_NESTED_BEFORE;
-use const GenDiff\ASTDefines\STATE_REMOVED;
-use const GenDiff\ASTDefines\STATE_UPDATED;
+use const GenDiff\ASTBuilder\TYPE_ADDED;
+use const GenDiff\ASTBuilder\TYPE_IDENTICAL;
+use const GenDiff\ASTBuilder\TYPE_REMOVED;
+use const GenDiff\ASTBuilder\TYPE_UPDATED;
 use function GenDiff\ASTBuilder\build;
 
 class ASTBuilderTest extends TestCase
@@ -19,14 +17,14 @@ class ASTBuilderTest extends TestCase
             [
                 ['key1' => 'val1'],
                 ['key1' => 'val1'],
-                [['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1']]
+                [['type' => TYPE_IDENTICAL, 'key' => 'key1', 'valBefore' => 'val1', 'valAfter' => 'val1', 'children' => null]]
             ],
             [
                 ['key1' => 'val1', 'key2' => 'val2',],
                 ['key1' => 'val1', 'key2' => 'val2',],
                 [
-                    ['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1',],
-                    ['state' => STATE_IDENTICAL, 'key' => 'key2', 'dataBefore' => 'val2', 'dataAfter' => 'val2'],
+                    ['type' => TYPE_IDENTICAL, 'key' => 'key1', 'valBefore' => 'val1', 'valAfter' => 'val1', 'children' => null],
+                    ['type' => TYPE_IDENTICAL, 'key' => 'key2', 'valBefore' => 'val2', 'valAfter' => 'val2', 'children' => null],
                 ]
             ],
             [[], [], []],
@@ -40,14 +38,14 @@ class ASTBuilderTest extends TestCase
             [
                 [],
                 ['key1' => 'val1'],
-                [['state' => STATE_ADDED, 'key' => 'key1', 'dataBefore' => null, 'dataAfter' => 'val1']]
+                [['type' => TYPE_ADDED, 'key' => 'key1', 'valBefore' => null, 'valAfter' => 'val1', 'children' => null]]
             ],
             [
                 ['key1' => 'val1'],
                 ['key1' => 'val1', 'key2' => 'val2',],
                 [
-                    ['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1'],
-                    ['state' => STATE_ADDED, 'key' => 'key2', 'dataBefore' => null, 'dataAfter' => 'val2'],
+                    ['type' => TYPE_IDENTICAL, 'key' => 'key1', 'valBefore' => 'val1', 'valAfter' => 'val1', 'children' => null],
+                    ['type' => TYPE_ADDED, 'key' => 'key2', 'valBefore' => null, 'valAfter' => 'val2', 'children' => null],
                 ]
             ],
             [[], [], []],
@@ -61,22 +59,22 @@ class ASTBuilderTest extends TestCase
             [
                 ['key1' => 'val1'],
                 [],
-                [['state' => STATE_REMOVED, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => null]]
+                [['type' => TYPE_REMOVED, 'key' => 'key1', 'valBefore' => 'val1', 'valAfter' => null, 'children' => null]]
             ],
             [
                 ['key1' => 'val1', 'key2' => 'val2',],
                 ['key1' => 'val1'],
                 [
-                    ['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1'],
-                    ['state' => STATE_REMOVED, 'key' => 'key2', 'dataBefore' => 'val2', 'dataAfter' => null],
+                    ['type' => TYPE_IDENTICAL, 'key' => 'key1', 'valBefore' => 'val1', 'valAfter' => 'val1', 'children' => null],
+                    ['type' => TYPE_REMOVED, 'key' => 'key2', 'valBefore' => 'val2', 'valAfter' => null, 'children' => null],
                 ]
             ],
             [
                 ['key2' => 'val2', 'key1' => 'val1',],
                 [],
                 [
-                    ['state' => STATE_REMOVED, 'key' => 'key2', 'dataBefore' => 'val2', 'dataAfter' => null],
-                    ['state' => STATE_REMOVED, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => null],
+                    ['type' => TYPE_REMOVED, 'key' => 'key2', 'valBefore' => 'val2', 'valAfter' => null, 'children' => null],
+                    ['type' => TYPE_REMOVED, 'key' => 'key1', 'valBefore' => 'val1', 'valAfter' => null, 'children' => null],
                 ]
             ],
             [[], [], []],
@@ -91,11 +89,11 @@ class ASTBuilderTest extends TestCase
                 ['key1' => 'val1', 'key2' => ['key1' => 'val1']],
                 [],
                 [
-                    ['state' => STATE_REMOVED, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => null],
-                    ['state' => STATE_REMOVED + STATE_NESTED_BEFORE, 'key' => 'key2', 'dataBefore' => [
-                        ['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1']
+                    ['type' => TYPE_REMOVED, 'key' => 'key1', 'valBefore' => 'val1', 'valAfter' => null, 'children' => null],
+                    ['type' => TYPE_REMOVED, 'key' => 'key2', 'valBefore' => null, 'children' => [
+                        ['type' => TYPE_IDENTICAL, 'key' => 'key1', 'valBefore' => 'val1', 'valAfter' => 'val1', 'children' => null]
                     ],
-                        'dataAfter' => null
+                        'valAfter' => null
                     ]
                 ]
             ],
@@ -107,14 +105,15 @@ class ASTBuilderTest extends TestCase
                     ]
                 ],
                 [
-                    ['state' => STATE_UPDATED + STATE_NESTED_AFTER, 'key' => 'key1', 'dataBefore' => 'val1',
-                        'dataAfter' => [[
-                            'state' => STATE_IDENTICAL,
+                    ['type' => TYPE_UPDATED, 'key' => 'key1', 'valBefore' => 'val1',
+                        'children' => [[
+                            'type' => TYPE_IDENTICAL,
                             'key' => 'key2',
-                            'dataBefore' => 'val2',
-                            'dataAfter' => 'val2'
-                        ]]],
-                    ['state' => STATE_REMOVED, 'key' => 'key2', 'dataBefore' => 'val2', 'dataAfter' => null],
+                            'valBefore' => 'val2',
+                            'valAfter' => 'val2',
+                            'children' => null
+                        ]], 'valAfter' => null],
+                    ['type' => TYPE_REMOVED, 'key' => 'key2', 'valBefore' => 'val2', 'valAfter' => null, 'children' => null],
                 ]
             ],
             [
@@ -126,18 +125,14 @@ class ASTBuilderTest extends TestCase
                 ],],
 
                 [
-                    ['state' => STATE_REMOVED, 'key' => 'key2', 'dataBefore' => 'val2', 'dataAfter' => null],
-                    ['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1'],
-                    ['state' => STATE_IDENTICAL, 'key' => 'key3', 'dataBefore' => 'val3', 'dataAfter' => 'val3'],
-                    ['state' => STATE_IDENTICAL + STATE_NESTED_BEFORE + STATE_NESTED_AFTER,
-                        'key' => 'key4', 'dataBefore' => [
-                        ['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1'],
-                        ['state' => STATE_UPDATED, 'key' => 'key2', 'dataBefore' => 'val2', 'dataAfter' => 'val33'],
-
-                    ],
-                        'dataAfter' => [
-                            ['state' => STATE_IDENTICAL, 'key' => 'key1', 'dataBefore' => 'val1', 'dataAfter' => 'val1'],
-                            ['state' => STATE_UPDATED, 'key' => 'key2', 'dataBefore' => 'val2', 'dataAfter' => 'val33'],
+                    ['type' => TYPE_REMOVED, 'key' => 'key2', 'valBefore' => 'val2', 'valAfter' => null, 'children' => null],
+                    ['type' => TYPE_IDENTICAL, 'key' => 'key1', 'valBefore' => 'val1', 'valAfter' => 'val1', 'children' => null],
+                    ['type' => TYPE_IDENTICAL, 'key' => 'key3', 'valBefore' => 'val3', 'valAfter' => 'val3', 'children' => null],
+                    ['type' => TYPE_IDENTICAL,
+                        'key' => 'key4', 'valBefore' => null, 'valAfter' => null,
+                        'children' => [
+                            ['type' => TYPE_IDENTICAL, 'key' => 'key1', 'valBefore' => 'val1', 'valAfter' => 'val1', 'children' => null],
+                            ['type' => TYPE_UPDATED, 'key' => 'key2', 'valBefore' => 'val2', 'valAfter' => 'val33', 'children' => null],
                         ],
 
                     ],

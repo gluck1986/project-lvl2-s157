@@ -3,7 +3,7 @@
 namespace GenDiff\Differ;
 
 use GenDiff\GenDiffException;
-use const GenDiff\ASTDefines\FORMAT_PRETTY;
+use const GenDiff\ASTBuilder\FORMAT_PRETTY;
 use function GenDiff\ASTBuilder\build;
 use function GenDiff\Parser\parse;
 use function GenDiff\ResponseBuilder\buildResponse;

@@ -25,7 +25,6 @@
       "src\\Cli.php",
       "src\\CliFunctions.php",
       "src\\Differ.php",
-      "src\\ASTDefines.php",
       "src\\ASTBuilder.php",
       "src\\ResponseBuilder.php",
       "src\\Parser.php"
