@@ -1,9 +1,9 @@
 <?php
 
-namespace GenDiff\CliFunctions;
+namespace GenDiff\CliAdapter;
 
 use Docopt\Handler;
-use function GenDiff\Differ\genDiff;
+use function GenDiff\Differ\genDiff as differGenDiff;
 
 function route()
 {
@@ -17,11 +17,11 @@ function route()
     ];
 }
 
-function runDiffer()
+function genDiff()
 {
     list($firstPath, $secondPath, $format) = route();
 
-    return genDiff($firstPath, $secondPath, $format);
+    return differGenDiff($firstPath, $secondPath, $format);
 }
 
 function getDoc(): string

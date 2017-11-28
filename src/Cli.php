@@ -2,9 +2,9 @@
 
 namespace GenDiff\Cli;
 
-use function GenDiff\CliFunctions\runDiffer;
+use function GenDiff\CliAdapter\genDiff;
 
 function run()
 {
-    echo runDiffer();
+    echo genDiff();
 }
