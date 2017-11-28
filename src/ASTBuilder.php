@@ -6,11 +6,12 @@ const TYPE_ADDED = 'added';
 const TYPE_REMOVED = 'removed';
 const TYPE_UPDATED = 'updated';
 const TYPE_IDENTICAL = 'identical';
+const TYPE_NESTED = 'nested';
 
 const KEY_KEY = 'key';
 const KEY_TYPE = 'type';
-const KEY_VALUE_BEFORE = 'valBefore';
-const KEY_VALUE_AFTER = 'valAfter';
+const KEY_DATA_BEFORE = 'dataBefore';
+const KEY_DATA_AFTER = 'dataAfter';
 const KEY_CHILDREN = 'children';
 
 const FORMAT_PRETTY = 'pretty';
@@ -25,83 +26,42 @@ const FORMAT_JSON = 'json';
  */
 function buildAST(array $first, array $second): array
 {
+    $uniqueKeys = array_unique(array_merge(array_keys($first), array_keys($second)));
+
     return array_reduce(
-        array_unique(array_merge(array_keys($first), array_keys($second))),
+        $uniqueKeys,
         function ($result, $key) use ($first, $second) {
             if (array_key_exists($key, $first) && array_key_exists($key, $second)) {
                 if (is_array($first[$key]) && is_array($second[$key])) {
                     $result[] = buildLeaf(
-                        TYPE_IDENTICAL,
+                        TYPE_NESTED,
                         $key,
                         null,
                         null,
                         buildAST($first[$key], $second[$key])
                     );
-                } elseif (is_array($first[$key])) {
-                    $result[] = buildLeaf(
-                        TYPE_UPDATED,
-                        $key,
-                        null,
-                        $second[$key],
-                        buildAST($first[$key], $first[$key])
-                    );
-                } elseif (is_array($second[$key])) {
-                    $result[] = buildLeaf(
-                        TYPE_UPDATED,
-                        $key,
-                        $first[$key],
-                        null,
-                        buildAST($second[$key], $second[$key])
-                    );
-                } elseif ($first[$key] !== $second[$key]) {
-                    $result[] = buildLeaf(
-                        TYPE_UPDATED,
-                        $key,
-                        $first[$key],
-                        $second[$key]
-                    );
                 } else {
                     $result[] = buildLeaf(
-                        TYPE_IDENTICAL,
+                        $first[$key] !== $second[$key] ? TYPE_UPDATED : TYPE_IDENTICAL,
                         $key,
                         $first[$key],
                         $second[$key]
                     );
                 }
             } elseif (array_key_exists($key, $first)) {
-                if (is_array($first[$key])) {
-                    $result[] = buildLeaf(
-                        TYPE_REMOVED,
-                        $key,
-                        null,
-                        null,
-                        buildAST($first[$key], $first[$key])
-                    );
-                } else {
-                    $result[] = buildLeaf(
-                        TYPE_REMOVED,
-                        $key,
-                        $first[$key],
-                        null
-                    );
-                }
+                $result[] = buildLeaf(
+                    TYPE_REMOVED,
+                    $key,
+                    $first[$key],
+                    null
+                );
             } else {
-                if (is_array($second[$key])) {
-                    $result[] = buildLeaf(
-                        TYPE_ADDED,
-                        $key,
-                        null,
-                        null,
-                        buildAST($second[$key], $second[$key])
-                    );
-                } else {
-                    $result[] = buildLeaf(
-                        TYPE_ADDED,
-                        $key,
-                        null,
-                        $second[$key]
-                    );
-                }
+                $result[] = buildLeaf(
+                    TYPE_ADDED,
+                    $key,
+                    null,
+                    $second[$key]
+                );
             }
 
             return $result;
@@ -120,14 +80,14 @@ function buildAST(array $first, array $second): array
  *
  * @return array
  */
-function buildLeaf(string $type, string $key, $valBefore, $valAfter, array $children = null)
+function buildLeaf(string $type, string $key, $dataBefore, $dataAfter, $children = null)
 {
     return compact(
         $type,
         $key,
-        $valBefore,
-        $valAfter,
+        $dataBefore,
+        $dataAfter,
         $children,
-        [KEY_TYPE, KEY_KEY, KEY_VALUE_BEFORE, KEY_VALUE_AFTER, KEY_CHILDREN]
+        [KEY_TYPE, KEY_KEY, KEY_DATA_BEFORE, KEY_DATA_AFTER, KEY_CHILDREN]
     );
 }

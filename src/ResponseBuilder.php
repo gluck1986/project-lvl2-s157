@@ -7,12 +7,12 @@ use const GenDiff\ASTBuilder\FORMAT_JSON;
 use const GenDiff\ASTBuilder\FORMAT_PLAIN;
 use const GenDiff\ASTBuilder\FORMAT_PRETTY;
 use const GenDiff\ASTBuilder\KEY_CHILDREN;
+use const GenDiff\ASTBuilder\KEY_DATA_AFTER;
+use const GenDiff\ASTBuilder\KEY_DATA_BEFORE;
 use const GenDiff\ASTBuilder\KEY_KEY;
 use const GenDiff\ASTBuilder\KEY_TYPE;
-use const GenDiff\ASTBuilder\KEY_VALUE_AFTER;
-use const GenDiff\ASTBuilder\KEY_VALUE_BEFORE;
 use const GenDiff\ASTBuilder\TYPE_ADDED;
-use const GenDiff\ASTBuilder\TYPE_IDENTICAL;
+use const GenDiff\ASTBuilder\TYPE_NESTED;
 use const GenDiff\ASTBuilder\TYPE_REMOVED;
 use const GenDiff\ASTBuilder\TYPE_UPDATED;
 
@@ -68,7 +68,7 @@ function buildPlainArr(array $ast)
             }
             if ($node[KEY_TYPE] === TYPE_ADDED) {
                 $label = $node[KEY_KEY];
-                if ($node[KEY_CHILDREN]) {
+                if (is_array($node[KEY_DATA_AFTER])) {
                     $result[] = [
                         KEY_RESPONSE_LABEL => $label,
                         KEY_RESPONSE_STATE => 'was added with value: \'complex value\''
@@ -76,35 +76,33 @@ function buildPlainArr(array $ast)
                 } else {
                     $result[] = [
                         KEY_RESPONSE_LABEL => $label,
-                        KEY_RESPONSE_STATE => 'was added with value: \'' . $node[KEY_VALUE_AFTER] . '\''
+                        KEY_RESPONSE_STATE => 'was added with value: \'' . $node[KEY_DATA_AFTER] . '\''
                     ];
                 }
             }
             if ($node[KEY_TYPE] === TYPE_UPDATED) {
-                if ($node[KEY_CHILDREN] && is_null($node[KEY_VALUE_BEFORE])) {
+                if ($node[KEY_CHILDREN] && is_null($node[KEY_DATA_BEFORE])) {
                     $result[] = [
                         KEY_RESPONSE_LABEL => $label,
                         KEY_RESPONSE_STATE => 'was changed. From: \'complex value\' to \''
-                            . $node[KEY_VALUE_AFTER] . '\''
+                            . $node[KEY_DATA_AFTER] . '\''
                     ];
-                } elseif ($node[KEY_CHILDREN] && is_null($node[KEY_VALUE_AFTER])) {
+                } elseif ($node[KEY_CHILDREN] && is_null($node[KEY_DATA_AFTER])) {
                     $result[] = [
                         KEY_RESPONSE_LABEL => $label,
-                        KEY_RESPONSE_STATE => 'was changed. From: \'' . $node[KEY_VALUE_BEFORE] . '\''
+                        KEY_RESPONSE_STATE => 'was changed. From: \'' . $node[KEY_DATA_BEFORE] . '\''
                             . ' to \'complex value\''
                     ];
                 } else {
                     $result[] = [
                         KEY_RESPONSE_LABEL => $label,
                         KEY_RESPONSE_STATE => 'was changed. From: \''
-                            . $node[KEY_VALUE_BEFORE] . '\''
-                            . ' to \'' . $node[KEY_VALUE_AFTER] . '\''
+                            . $node[KEY_DATA_BEFORE] . '\''
+                            . ' to \'' . $node[KEY_DATA_AFTER] . '\''
                     ];
                 }
             }
-            if ($node[KEY_TYPE] === TYPE_IDENTICAL
-                && $node[KEY_CHILDREN]
-            ) {
+            if ($node[KEY_TYPE] === TYPE_NESTED) {
                 $nested = buildPlainArr($node[KEY_CHILDREN]);
                 if (count($nested) > 0) {
                     $result = array_merge(
@@ -128,68 +126,57 @@ function buildPlainArr(array $ast)
 }
 
 
-function buildPretty(array $ast, int $spaces = 0): string
+function buildPretty(array $ast, int $spacesCount = 0): string
 {
-    $resultString = implode(
-        PHP_EOL,
-        array_reduce(
-            $ast,
-            function ($result, $node) use ($spaces) {
-                if ($node[KEY_TYPE] === TYPE_ADDED) {
-                    $result[] = generateSpaces($spaces)
-                        . getPrettyStatusLabel($node[KEY_TYPE])
-                        . '"' . $node[KEY_KEY] . '": '
-                        . buildPrettyValue(
-                            $node[KEY_VALUE_AFTER] ?? $node[KEY_CHILDREN],
-                            $spaces + RESPONSE_SPACES_NEXT_LEVEL
-                        );
-                } elseif ($node[KEY_TYPE] === TYPE_REMOVED) {
-                    $result[] = generateSpaces($spaces)
-                        . getPrettyStatusLabel($node[KEY_TYPE])
-                        . '"' . $node[KEY_KEY] . '": '
-                        . buildPrettyValue(
-                            $node[KEY_VALUE_BEFORE] ?? $node[KEY_CHILDREN],
-                            $spaces + RESPONSE_SPACES_NEXT_LEVEL
-                        );
-                } elseif ($node[KEY_TYPE] === TYPE_UPDATED) {
-                    $result[] = generateSpaces($spaces)
-                        . getPrettyStatusLabel(TYPE_REMOVED)
-                        . '"' . $node[KEY_KEY] . '": '
-                        . buildPrettyValue(
-                            $node[KEY_VALUE_BEFORE] ?? $node[KEY_CHILDREN],
-                            $spaces + RESPONSE_SPACES_NEXT_LEVEL
-                        );
+    $middleData = array_reduce(
+        $ast,
+        function ($result, $node) use ($spacesCount) {
+            if ($node[KEY_TYPE] === TYPE_NESTED) {
+                $result[] = generateSpaces($spacesCount)
+                    . getPrettyStatusLabel($node[KEY_TYPE])
+                    . '"' . $node[KEY_KEY] . '": '
+                    . buildPretty($node[KEY_CHILDREN], $spacesCount + RESPONSE_SPACES_NEXT_LEVEL);
+            } elseif ($node[KEY_TYPE] === TYPE_UPDATED) {
+                $result[] = generateSpaces($spacesCount)
+                    . getPrettyStatusLabel(TYPE_REMOVED)
+                    . '"' . $node[KEY_KEY] . '": '
+                    . buildPrettyValue(
+                        $node[KEY_DATA_BEFORE],
+                        $spacesCount + RESPONSE_SPACES_NEXT_LEVEL
+                    );
 
-                    $result[] = generateSpaces($spaces)
-                        . getPrettyStatusLabel(TYPE_ADDED)
-                        . '"' . $node[KEY_KEY] . '": '
-                        . buildPrettyValue(
-                            $node[KEY_VALUE_AFTER] ?? $node[KEY_CHILDREN],
-                            $spaces + RESPONSE_SPACES_NEXT_LEVEL
-                        );
-                } else {
-                    $result[] = generateSpaces($spaces)
-                        . getPrettyStatusLabel($node[KEY_TYPE])
-                        . '"' . $node[KEY_KEY] . '": '
-                        . buildPrettyValue(
-                            $node[KEY_VALUE_BEFORE] ?? $node[KEY_CHILDREN],
-                            $spaces + RESPONSE_SPACES_NEXT_LEVEL
-                        );
-                }
+                $result[] = generateSpaces($spacesCount)
+                    . getPrettyStatusLabel(TYPE_ADDED)
+                    . '"' . $node[KEY_KEY] . '": '
+                    . buildPrettyValue(
+                        $node[KEY_DATA_AFTER],
+                        $spacesCount + RESPONSE_SPACES_NEXT_LEVEL
+                    );
+            } else {
+                $result[] = generateSpaces($spacesCount)
+                    . getPrettyStatusLabel($node[KEY_TYPE])
+                    . '"' . $node[KEY_KEY] . '": '
+                    . buildPrettyValue(
+                        $node[KEY_DATA_BEFORE] ?? $node[KEY_DATA_AFTER],
+                        $spacesCount + RESPONSE_SPACES_NEXT_LEVEL
+                    );
+            }
 
-                return $result;
-            },
-            []
-        )
+            return $result;
+        },
+        []
     );
+    $resultString = implode(PHP_EOL, $middleData);
 
-    return '{' . PHP_EOL . $resultString . PHP_EOL . generateSpaces($spaces) . '}';
+    return '{' . PHP_EOL . $resultString . PHP_EOL . generateSpaces($spacesCount) . '}';
 }
 
-function buildPrettyValue($data, $spaces)
+function buildPrettyValue($data, $spacesCount)
 {
     if (is_array($data)) {
-        return buildPretty($data, $spaces);
+        $json = json_encode($data, JSON_PRETTY_PRINT);
+
+        return str_replace(PHP_EOL, PHP_EOL . generateSpaces($spacesCount), $json);
     }
     if (is_bool($data)) {
         return ($data ? 'true' : 'false');
