@@ -7,7 +7,7 @@ use const GenDiff\ASTBuilder\TYPE_ADDED;
 use const GenDiff\ASTBuilder\TYPE_IDENTICAL;
 use const GenDiff\ASTBuilder\TYPE_REMOVED;
 use const GenDiff\ASTBuilder\TYPE_UPDATED;
-use function GenDiff\ASTBuilder\build;
+use function GenDiff\ASTBuilder\buildAST;
 
 class ASTBuilderTest extends TestCase
 {
@@ -146,28 +146,28 @@ class ASTBuilderTest extends TestCase
     /** @dataProvider identDataProvider */
     public function testIdent($first, $second, $excepted)
     {
-        $actual = build($first, $second);
+        $actual = buildAST($first, $second);
         $this->assertEquals($excepted, $actual, 'ident');
     }
 
     /** @dataProvider createDataProvider */
     public function testCreated($first, $second, $excepted)
     {
-        $actual = build($first, $second);
+        $actual = buildAST($first, $second);
         $this->assertEquals($excepted, $actual, 'create');
     }
 
     /** @dataProvider deleteDataProvider */
     public function testDeleted($first, $second, $excepted)
     {
-        $actual = build($first, $second);
+        $actual = buildAST($first, $second);
         $this->assertEquals($excepted, $actual, 'delete');
     }
 
     /** @dataProvider diffMultiLevelDataProvider */
     public function testDiffMultilevel($first, $second, $excepted)
     {
-        $actual = build($first, $second);
+        $actual = buildAST($first, $second);
         $this->assertEquals($excepted, $actual, 'diff multilevel');
     }
 

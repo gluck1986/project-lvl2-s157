@@ -23,7 +23,7 @@ const FORMAT_JSON = 'json';
  *
  * @return array
  */
-function build(array $first, array $second): array
+function buildAST(array $first, array $second): array
 {
     return array_reduce(
         array_unique(array_merge(array_keys($first), array_keys($second))),
@@ -35,7 +35,7 @@ function build(array $first, array $second): array
                         $key,
                         null,
                         null,
-                        build($first[$key], $second[$key])
+                        buildAST($first[$key], $second[$key])
                     );
                 } elseif (is_array($first[$key])) {
                     $result[] = buildLeaf(
@@ -43,7 +43,7 @@ function build(array $first, array $second): array
                         $key,
                         null,
                         $second[$key],
-                        build($first[$key], $first[$key])
+                        buildAST($first[$key], $first[$key])
                     );
                 } elseif (is_array($second[$key])) {
                     $result[] = buildLeaf(
@@ -51,7 +51,7 @@ function build(array $first, array $second): array
                         $key,
                         $first[$key],
                         null,
-                        build($second[$key], $second[$key])
+                        buildAST($second[$key], $second[$key])
                     );
                 } elseif ($first[$key] !== $second[$key]) {
                     $result[] = buildLeaf(
@@ -75,7 +75,7 @@ function build(array $first, array $second): array
                         $key,
                         null,
                         null,
-                        build($first[$key], $first[$key])
+                        buildAST($first[$key], $first[$key])
                     );
                 } else {
                     $result[] = buildLeaf(
@@ -92,7 +92,7 @@ function build(array $first, array $second): array
                         $key,
                         null,
                         null,
-                        build($second[$key], $second[$key])
+                        buildAST($second[$key], $second[$key])
                     );
                 } else {
                     $result[] = buildLeaf(

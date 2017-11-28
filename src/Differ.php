@@ -4,7 +4,7 @@ namespace GenDiff\Differ;
 
 use GenDiff\GenDiffException;
 use const GenDiff\ASTBuilder\FORMAT_PRETTY;
-use function GenDiff\ASTBuilder\build;
+use function GenDiff\ASTBuilder\buildAST;
 use function GenDiff\Parser\parse;
 use function GenDiff\ResponseBuilder\buildResponse;
 
@@ -14,7 +14,7 @@ function genDiff($file1, $file2, $format = FORMAT_PRETTY)
     validateFile($file2);
     $contentBefore = parse(file_get_contents($file1), getExt($file1));
     $contentAfter = parse(file_get_contents($file2), getExt($file2));
-    $ast = build($contentBefore, $contentAfter);
+    $ast = buildAST($contentBefore, $contentAfter);
 
     return buildResponse($ast, $format);
 }
