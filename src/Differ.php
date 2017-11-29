@@ -8,6 +8,8 @@ use function GenDiff\ASTBuilder\buildAST;
 use function GenDiff\Parser\parse;
 use function GenDiff\ResponseBuilder\buildResponse;
 
+const NEED_FILE_NAME_PARTS = 2;
+
 function genDiff($file1, $file2, $format = FORMAT_PRETTY)
 {
     validateFile($file1);
@@ -33,9 +35,11 @@ function validateFile($filePath)
 
 function getExt(string $path): string
 {
-    $baseExt = explode('.', basename($path));
-    if (count($baseExt) === 2) {
-        return mb_strtolower(trim(array_pop($baseExt)));
+    $fileNameParts = explode('.', basename($path));
+    if (count($fileNameParts) === NEED_FILE_NAME_PARTS) {
+        $lastPart = $fileNameParts[NEED_FILE_NAME_PARTS - 1];
+
+        return mb_strtolower(trim($lastPart));
     }
 
     return '';
