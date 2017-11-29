@@ -32,4 +32,3 @@ function validateFile($filePath)
         throw new GenDiffException('У файлов отсутствует расширение');
     }
 }
-
